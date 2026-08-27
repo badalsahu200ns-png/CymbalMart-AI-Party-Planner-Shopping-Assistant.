@@ -1,0 +1,8 @@
+{
+  "name": "CymbalMart AI Party Planner",
+  "description": "An AI-powered event assistant that streamlines party planning, budget tracking, and shopping list generation with seamless Google integrations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
