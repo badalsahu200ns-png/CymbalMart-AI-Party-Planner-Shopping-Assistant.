@@ -145,6 +145,11 @@ npm start
 ```
 
 ---
+## Author
+
+**Badal Kumar Sahu**  
+📧 Email: badalsahu200ns@gmail.com  
+💼 LinkedIn: [Badal Kumar Sahu](https://www.linkedin.com/in/badalsahu200ns/)  
 
 ## 📄 License
 MIT License. Built for seamless event planning and retail convenience with CymbalMart.
