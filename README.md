@@ -1,5 +1,5 @@
 # CymbalMart AI Party Planner & Shopping Assistant
-https://cymbalmart-ai-party-planner.ai.studio
+Visit my application: https://cymbalmart-ai-party-planner.ai.studio
 
 An intelligent, full-stack event planning and retail shopping management application powered by Google Gemini AI. **CymbalMart AI Party Planner** automates party creation, dynamic item quantity calculations based on guest headcounts, budget optimization, personalized invitation crafting, venue logistics, and schedule synchronization.
 
