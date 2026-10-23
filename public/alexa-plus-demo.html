@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101522">
+<title>CymbalMart | Alexa+ Experience Simulation</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141c2d;--panel2:#19243a;--line:#2c3b55;--text:#f5f7fb;--muted:#a8b4c9;--cyan:#75e4dc;--purple:#b4a0ff;--green:#9ce7b0;--danger:#ff9f9f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#1b3150 0,transparent 45%),radial-gradient(ellipse at 100% 20%,#30214c 0,transparent 35%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.wrap{max-width:1180px;margin:auto;padding:26px 20px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}.brand{display:flex;gap:12px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:grid;place-items:center;color:#101522;font-weight:900;font-size:20px}.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.brand h1{font-size:20px;margin:0}.sub{color:var(--muted);font-size:13px}.tag{border:1px solid #4c4775;background:#231f3d;color:#ddd5ff;padding:7px 11px;border-radius:999px;font-size:12px}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;margin-bottom:20px}.panel{background:linear-gradient(150deg,rgba(25,36,58,.96),rgba(16,23,39,.96));border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 16px 45px #0002}.hero h2{font-size:clamp(26px,4vw,42px);line-height:1.1;letter-spacing:-.04em;margin:12px 0}.hero p{color:var(--muted);max-width:620px}.glow{display:flex;align-items:center;justify-content:center;min-height:200px;position:relative;overflow:hidden}.orb{width:132px;height:132px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#fff 0,#b2fff3 8%,#6fded6 25%,#6965d8 65%,#262b62 100%);box-shadow:0 0 38px #78e7dd66,0 0 90px #a38aff44;animation:breathe 4s ease-in-out infinite}.orb:after{content:"";position:absolute;inset:calc(50% - 94px);border:1px solid #b7c4ff40;border-radius:50%;transform:scaleX(1.5) rotate(-20deg)}@keyframes breathe{50%{transform:scale(1.06);filter:hue-rotate(15deg)}}.status{position:absolute;bottom:18px;color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:20px}.sectionhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.sectionhead h3{margin:0;font-size:17px}.pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#1d3545;color:var(--cyan)}.chatlog{display:flex;flex-direction:column;gap:12px;min-height:210px;max-height:330px;overflow:auto;padding:4px 2px 14px}.bubble{max-width:90%;padding:12px 14px;border-radius:16px;white-space:pre-wrap}.assistant{background:#202c43;border:1px solid #34435d;border-top-left-radius:5px;align-self:flex-start}.user{background:#253f54;border:1px solid #356477;border-top-right-radius:5px;align-self:flex-end}.who{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--cyan);font-weight:800;margin-bottom:4px}.composer{display:flex;gap:8px;margin-top:10px}.composer input{min-width:0;flex:1;background:#0e1524;border:1px solid var(--line);border-radius:13px;padding:13px;color:var(--text)}.btn{border:1px solid var(--line);border-radius:12px;padding:10px 13px;background:#202b41;color:var(--text);font-weight:700}.btn.primary{background:linear-gradient(120deg,#76e2d7,#b9a7ff);border:0;color:#111729}.btn.mic{min-width:48px;font-size:18px}.btn:disabled{opacity:.45;cursor:not-allowed}.quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.quick button{font-size:12px;padding:8px 10px;border-radius:999px;background:#131d30;border:1px solid var(--line);color:#dce5f7}.quick button:hover,.btn:hover{border-color:var(--cyan)}.note{font-size:12px;color:var(--muted);margin-top:12px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px}.stat{background:#0e1627;border:1px solid #29364e;border-radius:14px;padding:13px}.stat small{color:var(--muted);display:block;font-size:11px}.stat strong{font-size:20px;display:block;margin-top:3px}.budgetbar{height:8px;background:#2a344a;border-radius:99px;overflow:hidden;margin:8px 0 18px}.budgetbar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .25s}.items{display:flex;flex-direction:column;gap:8px}.item{display:flex;align-items:center;gap:10px;background:#0e1627;border:1px solid #28364d;border-radius:14px;padding:11px}.item .emoji{font-size:22px}.item .info{flex:1;min-width:0}.item .info strong{display:block;font-size:13px}.item .info small{color:var(--muted);font-size:11px}.qty{display:flex;align-items:center;gap:8px}.qty button{border:1px solid #394963;background:#1c2940;color:white;border-radius:8px;width:27px;height:27px}.qty span{min-width:12px;text-align:center}.empty{color:var(--muted);padding:18px;text-align:center}.footer{text-align:center;color:#8290a9;font-size:11px;margin-top:24px}.alert{font-size:12px;color:#ffe2a5;border:1px solid #66502d;background:#2a2419;padding:9px 11px;border-radius:11px;margin-top:12px}
+@media(max-width:800px){.hero,.grid{grid-template-columns:1fr}.glow{min-height:170px}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.panel{padding:17px}.wrap{padding:16px 12px 40px}.hero h2{font-size:30px}}@media(max-width:420px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:span 2}.composer{flex-wrap:wrap}.composer input{flex-basis:100%}.composer .btn.primary{flex:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="logo">C</div><div><div class="eyebrow">CymbalMart • Voice-first commerce</div><h1>Shopping Companion</h1><div class="sub">A simulated Alexa+ style assistant experience</div></div></div>
+  <span class="tag">Hackathon demo • Web simulation</span>
+</header>
+<section class="hero">
+  <div class="panel">
+    <div class="eyebrow">More natural. More helpful.</div>
+    <h2>Plan the party.<br><span style="color:var(--cyan)">We’ll handle the list.</span></h2>
+    <p>Use voice or text to plan a celebration, update your shopping list, and keep the budget in view. Try a suggested request to see the experience respond and update the shared state.</p>
+    <div class="quick">
+      <button data-command="Plan a birthday party for 12 people with a budget of 5000 rupees">Plan a birthday party</button>
+      <button data-command="Add 2 bottles of sparkling water">Add sparkling water</button>
+      <button data-command="Show my budget">Show my budget</button>
+    </div>
+  </div>
+  <div class="panel glow" aria-label="Animated assistant visual"><div class="orb"></div><div class="status" id="voiceStatus">Ready when you are</div></div>
+</section>
+<section class="grid">
+  <div class="panel">
+    <div class="sectionhead"><h3>Talk to your companion</h3><span class="pill" id="modePill">Text + voice</span></div>
+    <div class="chatlog" id="chatlog" aria-live="polite"><div class="bubble assistant"><span class="who">CymbalMart Assistant</span>Hi! I can help plan your event, update shopping quantities, and track your budget. What are we celebrating?</div></div>
+    <form class="composer" id="chatForm"><input id="messageInput" autocomplete="off" placeholder="Try “add 2 bottles of water”" aria-label="Message the assistant"><button class="btn primary" type="submit">Send ↗</button><button class="btn mic" id="micButton" type="button" title="Use voice input" aria-label="Use voice input">🎙</button></form>
+    <div class="quick">
+      <button data-command="Remove balloons">Remove balloons</button>
+      <button data-command="What's left to buy?">What’s left to buy?</button>
+      <button data-command="Set my budget to 7000 rupees">Set budget to ₹7,000</button>
+    </div>
+    <div class="note">Voice input requires a supported browser and microphone permission. If unavailable, all demo flows work with text.</div>
+    <div class="alert">Independent prototype for the Alexa+ track. This is a simulated web experience, not an official Alexa+ integration or Amazon service.</div>
+  </div>
+  <div class="panel">
+    <div class="sectionhead"><h3>Live party snapshot</h3><span class="pill" id="eventType">Birthday</span></div>
+    <div class="stats"><div class="stat"><small>Guests</small><strong id="guestCount">12</strong></div><div class="stat"><small>Budget</small><strong id="budgetTotal">₹5,000</strong></div><div class="stat"><small>Estimated spend</small><strong id="spendTotal">₹1,380</strong></div></div>
+    <div class="sub">Budget used <span id="budgetPercent">28%</span></div><div class="budgetbar"><span id="budgetFill"></span></div>
+    <div class="sectionhead"><h3>Shopping list</h3><span class="pill" id="itemCount">5 items</span></div>
+    <div class="items" id="items"></div>
+    <div class="note">Quantities and estimated prices are sample demo data, not live inventory or offers.</div>
+  </div>
+</section>
+<div class="footer">CymbalMart • Alexa+ simulated experience • Built for the Amazon Developer Hackathon</div>
+</div>
+<script>
+(() => {
+  const initial = [
+    {id:"cake",name:"Birthday cake",emoji:"🎂",qty:1,price:650},
+    {id:"water",name:"Bottled water",emoji:"💧",qty:2,price:35},
+    {id:"balloons",name:"Balloons & decor",emoji:"🎈",qty:1,price:280},
+    {id:"plates",name:"Paper plates",emoji:"🍽️",qty:2,price:60},
+    {id:"snacks",name:"Party snacks",emoji:"🍿",qty:3,price:85}
+  ];
+  let items = initial.map(x=>({...x}));
+  let budget = 5000, guests = 12, eventName = "Birthday";
+  const $ = id => document.getElementById(id);
+  const money = n => "₹" + Math.round(n).toLocaleString("en-IN");
+  const spend = () => items.reduce((sum,x)=>sum+x.qty*x.price,0);
+  function render(){
+    $("guestCount").textContent=guests;
+    $("budgetTotal").textContent=money(budget);
+    $("spendTotal").textContent=money(spend());
+    const pct=budget>0?Math.min(100,Math.round(spend()/budget*100)):100;
+    $("budgetPercent").textContent=pct+"%";
+    $("budgetFill").style.width=pct+"%";
+    $("eventType").textContent=eventName;
+    $("itemCount").textContent=items.length+" items";
+    $("items").innerHTML=items.length?items.map(x=>'<div class="item"><span class="emoji">'+x.emoji+'</span><div class="info"><strong>'+escapeHtml(x.name)+'</strong><small>'+money(x.price)+' each • '+money(x.price*x.qty)+' total</small></div><div class="qty"><button data-minus="'+x.id+'" aria-label="Decrease '+escapeHtml(x.name)+'">−</button><span>'+x.qty+'</span><button data-plus="'+x.id+'" aria-label="Increase '+escapeHtml(x.name)+'">+</button></div></div>').join(''):'<div class="empty">Your shopping list is empty. Ask me to add something.</div>';
+  }
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function addBubble(role,text){
+    const node=document.createElement("div");node.className="bubble "+role;
+    const who=document.createElement("span");who.className="who";who.textContent=role==="user"?"You":"CymbalMart Assistant";
+    node.appendChild(who);node.appendChild(document.createTextNode(text));$("chatlog").appendChild(node);$("chatlog").scrollTop=$("chatlog").scrollHeight;
+  }
+  function speak(text){if("speechSynthesis" in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=1.02;window.speechSynthesis.speak(u);}}
+  function respond(raw){
+    const msg=raw.trim();if(!msg)return;
+    addBubble("user",msg);
+    const s=msg.toLowerCase();let reply="";
+    if(/birthday|party|celebration|plan.*event/.test(s)){
+      const g=s.match(/(\d+)\s*(people|guests|persons|attendees)?/);if(g)guests=Math.max(1,Math.min(500,Number(g[1])));
+      const b=s.match(/(?:₹|rs\.?\s*|rupees?\s*)([\d,]+)/)||s.match(/budget\s*(?:of|to|is)?\s*([\d,]+)/);
+      if(b)budget=Math.max(100,Number(b[1].replace(/,/g,"")));
+      eventName=/wedding/.test(s)?"Wedding":/corporate|office|team/.test(s)?"Corporate event":/anniversary/.test(s)?"Anniversary":"Birthday";
+      if(!items.length)items=initial.map(x=>({...x}));
+      reply="Done — I’ve set up a "+eventName.toLowerCase()+" plan for "+guests+" guests with a "+money(budget)+" budget. Your starter shopping list is ready. Ask me to add or remove items, or check your budget.";
+    }else if(/set.*budget|budget.*(to|at|is)/.test(s)){
+      const b=s.match(/(?:₹|rs\\.?\\s*|rupees?\\s*)?([\\d,]+)\\s*(?:rupees?)?/);if(b){budget=Math.max(100,Number(b[1].replace(/,/g,"")));reply="Updated your budget to "+money(budget)+". Your current list is "+money(spend())+".";}else reply="Tell me the amount, for example “set my budget to 7000 rupees”.";
+    }else if(/budget|spend|cost|afford/.test(s)){
+      reply="Your estimated list total is "+money(spend())+" against a "+money(budget)+" budget. That leaves "+money(budget-spend())+" "+(spend()>budget?"over budget. I recommend removing low-priority decor or choosing cheaper snacks.":"remaining. I’ll keep the total visible as we update your list.");
+    }else if(/what.?s left|shopping list|show.*items|what.*buy|list/.test(s)){
+      reply=items.length?"You currently have "+items.map(x=>x.qty+" × "+x.name).join(", ")+". The estimated total is "+money(spend())+".":"Your shopping list is empty. Tell me what to add.";
+    }else if(/remove|delete|take off/.test(s)){
+      const found=items.find(x=>s.includes(x.name.toLowerCase())||((/balloon|decor/.test(s))&&x.id==="balloons")||((/water/.test(s))&&x.id==="water")||((/cake/.test(s))&&x.id==="cake")||((/plate/.test(s))&&x.id==="plates")||((/snack/.test(s))&&x.id==="snacks"));
+      if(found){items=items.filter(x=>x.id!==found.id);reply="Removed "+found.name+" from your shopping list. Your updated estimate is "+money(spend())+".";}else reply="I couldn’t match that item. Try “remove balloons” or “remove cake”.";
+    }else if(/add|include|need|buy/.test(s)){
+      const qtyMatch=s.match(/\b(\d+)\b/);const qty=qtyMatch?Math.max(1,Math.min(99,Number(qtyMatch[1]))):1;
+      let found=items.find(x=>s.includes(x.name.toLowerCase())||(x.id==="water"&&/water/.test(s))||(x.id==="balloons"&&/balloon|decor/.test(s))||(x.id==="cake"&&/cake/.test(s))||(x.id==="plates"&&/plate/.test(s))||(x.id==="snacks"&&/snack|popcorn|chips/.test(s)));
+      if(found){found.qty+=qty;reply="Added "+qty+" more "+found.name+". The new estimated total is "+money(spend())+".";}
+      else {let name="Party supplies",emoji="🛍️",price=100,id="custom-"+Date.now();if(/sparkling water/.test(s)){name="Sparkling water";emoji="🫧";price=70;}else if(/juice|drink/.test(s)){name="Juice cartons";emoji="🧃";price=55;}else if(/napkin/.test(s)){name="Napkins";emoji="🧻";price=45;}else if(/ice/.test(s)){name="Ice bags";emoji="🧊";price=50;}items.push({id,name,emoji,qty,price});reply="Added "+qty+" × "+name+" at an estimated "+money(price)+" each. Your list now totals "+money(spend())+".";}
+    }else if(/set.*budget|budget.*(to|at|is)/.test(s)){
+      const b=s.match(/(?:₹|rs\.?\s*|rupees?\s*)?([\d,]+)\s*(?:rupees?)?/);if(b){budget=Math.max(100,Number(b[1].replace(/,/g,"")));reply="Updated your budget to "+money(budget)+". Your current list is "+money(spend())+".";}else reply="Tell me the amount, for example “set my budget to 7000 rupees”.";
+    }else if(/guest|people|attendee/.test(s)){
+      const g=s.match(/\b(\d+)\b/);if(g){guests=Math.max(1,Math.min(500,Number(g[1])));reply="Updated your guest count to "+guests+". I can scale the shopping list next; would you like me to increase quantities for the larger group?";}else reply="You have "+guests+" guests in the current plan.";
+    }else if(/hello|hi\b|hey\b/.test(s)){reply="Hello! I can plan a party, update your shopping list, or check your budget. What would you like to do?";}
+    else {reply="I can help with party planning, guest count, shopping quantities, and budget. Try “plan a birthday party for 12 with a budget of 5000 rupees” or use one of the suggested requests.";}
+    render();addBubble("assistant",reply);speak(reply);
+  }
+  $("chatForm").addEventListener("submit",e=>{e.preventDefault();const input=$("messageInput");respond(input.value);input.value="";input.focus();});
+  document.querySelectorAll("[data-command]").forEach(b=>b.addEventListener("click",()=>respond(b.dataset.command)));
+  $("items").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const id=b.dataset.plus||b.dataset.minus;const item=items.find(x=>x.id===id);if(!item)return;if(b.dataset.plus)item.qty=Math.min(99,item.qty+1);else if(item.qty>1)item.qty--;else items=items.filter(x=>x.id!==id);render();});
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SpeechRecognition){const rec=new SpeechRecognition();rec.lang="en-IN";rec.interimResults=false;rec.maxAlternatives=1;rec.onstart=()=>{$("voiceStatus").textContent="Listening…";$("micButton").textContent="⏺";};rec.onend=()=>{$("voiceStatus").textContent="Ready when you are";$("micButton").textContent="🎙";};rec.onerror=()=>{$("voiceStatus").textContent="Voice unavailable — use text";};rec.onresult=e=>{const text=e.results[0][0].transcript;$("messageInput").value=text;respond(text);$("messageInput").value="";};$("micButton").addEventListener("click",()=>{try{rec.start();}catch(e){$("voiceStatus").textContent="Already listening";}});}
+  else {$("micButton").disabled=true;$("micButton").title="Voice recognition is not supported in this browser. Use text input.";$("modePill").textContent="Text mode";$("voiceStatus").textContent="Text mode available";}
+  render();
+})();
+</script>
+</body>
+</html>
