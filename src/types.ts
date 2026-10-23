@@ -60,6 +60,7 @@ export interface ShoppingItem {
   isCustom?: boolean;
   isRemoved?: boolean;
   checked?: boolean;
+  imageUrl?: string;
 }
 
 export interface Guest {
@@ -218,6 +219,16 @@ export interface ChatMessage {
 }
 
 export type NavigationTab =
+  | 'my-hub'
+  | 'events'
+  | 'planning'
+  | 'celebrations'
+  | 'shopping'
+  | 'suppliers'
+  | 'budgets'
+  | 'reports'
+  | 'settings'
+  | 'feedback'
   | 'dashboard'
   | 'planner'
   | 'shopping'
@@ -227,3 +238,44 @@ export type NavigationTab =
   | 'venue'
   | 'calendar'
   | 'final-review';
+
+export interface Supplier {
+  id: string;
+  name: string;
+  category: 'Catering' | 'Venue' | 'Decor & Flowers' | 'Photography' | 'Music & DJ' | 'Bakery' | 'Entertainment';
+  rating: number;
+  reviewsCount: number;
+  priceRange: '₹' | '₹₹' | '₹₹₹' | '₹₹₹₹';
+  location: string;
+  imageUrl: string;
+  description: string;
+  contactPhone: string;
+  contactEmail: string;
+  featured?: boolean;
+  isBooked?: boolean;
+  estimatedPrice?: number;
+}
+
+export interface CelebrationCategory {
+  id: string;
+  title: string;
+  tagline: string;
+  description: string;
+  imageUrl: string;
+  badge: string;
+  defaultBudget: number;
+  defaultGuests: number;
+  suggestedTheme: string;
+  defaultPartyType: PartyType;
+}
+
+export interface PlanningTask {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Venue & Logistics' | 'Food & Beverage' | 'Decor & Atmosphere' | 'Guests & RSVPs' | 'Shopping & Supplies';
+  dueDate: string;
+  completed: boolean;
+  priority: 'High' | 'Medium' | 'Low';
+  assignedTo?: string;
+}
