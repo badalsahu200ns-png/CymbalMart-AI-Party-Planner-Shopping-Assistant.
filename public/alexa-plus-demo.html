@@ -101,6 +101,8 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
       eventName=/wedding/.test(s)?"Wedding":/corporate|office|team/.test(s)?"Corporate event":/anniversary/.test(s)?"Anniversary":"Birthday";
       if(!items.length)items=initial.map(x=>({...x}));
       reply="Done — I’ve set up a "+eventName.toLowerCase()+" plan for "+guests+" guests with a "+money(budget)+" budget. Your starter shopping list is ready. Ask me to add or remove items, or check your budget.";
+    }else if(/set.*budget|budget.*(to|at|is)/.test(s)){
+      const b=s.match(/(?:₹|rs\\.?\\s*|rupees?\\s*)?([\\d,]+)\\s*(?:rupees?)?/);if(b){budget=Math.max(100,Number(b[1].replace(/,/g,"")));reply="Updated your budget to "+money(budget)+". Your current list is "+money(spend())+".";}else reply="Tell me the amount, for example “set my budget to 7000 rupees”.";
     }else if(/budget|spend|cost|afford/.test(s)){
       reply="Your estimated list total is "+money(spend())+" against a "+money(budget)+" budget. That leaves "+money(budget-spend())+" "+(spend()>budget?"over budget. I recommend removing low-priority decor or choosing cheaper snacks.":"remaining. I’ll keep the total visible as we update your list.");
     }else if(/what.?s left|shopping list|show.*items|what.*buy|list/.test(s)){
