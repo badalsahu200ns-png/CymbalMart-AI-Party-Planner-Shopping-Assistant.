@@ -628,12 +628,55 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const executeIntent = async (command: string): Promise<{ executed: boolean; reply: string; navigatedTo?: string; updatedDataSummary?: string }> => {
     const lower = command.toLowerCase().trim();
 
+    // 0. INLINE ACTION: Plan or configure celebration (e.g. "Plan a birthday party for 12 guests with a budget of 5000 rupees")
+    if (/birthday|party|celebration|plan.*(?:party|event|celebration)|create.*(?:party|event)/i.test(lower) && (lower.includes('plan') || lower.includes('create') || lower.includes('for') || lower.includes('budget'))) {
+      const gMatch = lower.match(/(\d+)\s*(?:people|guests|persons|attendees)?/i);
+      const bMatch = lower.match(/(?:₹|rs\.?\s*|rupees?\s*|inr\s*)([\d,]+)/i) || 
+                     lower.match(/budget\s*(?:of|to|is)?\s*(?:₹|rs\.?\s*|inr\s*)?([\d,]+)/i);
+
+      const parsedGuests = gMatch ? Math.max(1, Math.min(500, parseInt(gMatch[1], 10))) : activeEvent.guestCount;
+      const parsedBudget = bMatch ? Math.max(100, parseInt(bMatch[1].replace(/,/g, ''), 10)) : activeEvent.budget;
+
+      let eventType: PartyType = 'Birthday Party';
+      if (/wedding/i.test(lower)) eventType = 'Wedding Reception';
+      else if (/corporate|team/i.test(lower)) eventType = 'Corporate Team Event';
+      else if (/anniversary/i.test(lower)) eventType = 'Anniversary';
+
+      const updatedParams: Partial<PartyEvent> = {
+        name: `${eventType.replace(' Party', '')} for ${parsedGuests} Guests`,
+        type: eventType,
+        guestCount: parsedGuests,
+        budget: parsedBudget,
+      };
+
+      updateActiveEvent(updatedParams);
+      const newRemaining = parsedBudget - totalShoppingCost;
+
+      return {
+        executed: true,
+        reply: `Planned your ${eventType} for ${parsedGuests} guests with a budget of ${formatCurrency(parsedBudget)}.`,
+        updatedDataSummary: `Guests: ${parsedGuests}\nBudget: ${formatCurrency(parsedBudget)}\nEstimated shopping total: ${formatCurrency(totalShoppingCost)}\nRemaining: ${formatCurrency(newRemaining)}`,
+        navigatedTo: 'Dashboard',
+      };
+    }
+
     // 1. INLINE ACTION: Remove item (e.g. "remove balloons", "remove pizza", "delete 10 cups")
-    if (lower.startsWith('remove ') || lower.startsWith('delete ') || lower.includes('remove item')) {
-      const targetQuery = lower.replace(/^(remove|delete)\s+(the\s+)?/i, '').trim();
-      const match = activeEvent.shoppingItems.find(
-        (i) => !i.isRemoved && i.name.toLowerCase().includes(targetQuery)
-      );
+    if (lower.startsWith('remove ') || lower.startsWith('delete ') || lower.includes('remove item') || lower.includes('take off')) {
+      const targetQuery = lower.replace(/^(?:please\s+)?(?:remove|delete|take\s+off)\s+(?:the\s+)?/i, '').trim();
+      const isSparkling = /sparkling/i.test(targetQuery);
+      const isOrdinaryWater = /water/i.test(targetQuery) && !isSparkling;
+
+      const match = activeEvent.shoppingItems.find((i) => {
+        if (i.isRemoved) return false;
+        const itemName = i.name.toLowerCase();
+        if (isSparkling) return /sparkling/i.test(itemName);
+        if (isOrdinaryWater) return /water/i.test(itemName) && !/sparkling/i.test(itemName);
+        if (/balloon|decor/i.test(targetQuery)) return /balloon|decor/i.test(itemName);
+        if (/cake/i.test(targetQuery)) return /cake/i.test(itemName);
+        if (/plate/i.test(targetQuery)) return /plate/i.test(itemName);
+        if (/snack/i.test(targetQuery)) return /snack|popcorn|chips/i.test(itemName);
+        return itemName.includes(targetQuery) || targetQuery.includes(itemName);
+      });
 
       if (match) {
         const updated = activeEvent.shoppingItems.map((i) => (i.id === match.id ? { ...i, isRemoved: true } : i));
@@ -649,36 +692,70 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
     }
 
-    // 2. INLINE ACTION: Add quick shopping items with quantity (e.g. "Add 10 bottles of water", "Add 5 packs of chips")
-    const addQuantityMatch = lower.match(/^add\s+(\d+)\s+([a-zA-Z\s]+?)(?:for\s+₹?(\d+))?$/i);
+    // 2. INLINE ACTION: Add quick shopping items with quantity (supports digits and word numbers like "two")
+    const wordNumbers: Record<string, number> = {
+      one: 1, a: 1, an: 1, two: 2, couple: 2, three: 3, four: 4, five: 5,
+      six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+      dozen: 12, fifteen: 15, twenty: 20
+    };
+    const addQuantityMatch = lower.match(/^(?:please\s+)?(?:add|include|buy|need)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|a|an)\s+([a-zA-Z\s]+?)(?:for\s+(?:₹|rs\.?|inr)?\s*(\d+))?$/i);
     if (addQuantityMatch) {
-      const qty = parseInt(addQuantityMatch[1], 10);
-      const itemName = addQuantityMatch[2].trim();
-      const unitPrice = addQuantityMatch[3] ? parseInt(addQuantityMatch[3], 10) : 50;
+      const rawQty = addQuantityMatch[1].toLowerCase();
+      const qty = /^\d+$/.test(rawQty) ? parseInt(rawQty, 10) : (wordNumbers[rawQty] || 1);
+      const rawItemName = addQuantityMatch[2].trim();
+      const unitPrice = addQuantityMatch[3] ? parseInt(addQuantityMatch[3], 10) : (/sparkling/i.test(rawItemName) ? 70 : 50);
+
+      const isSparkling = /sparkling/i.test(rawItemName);
+      const isOrdinaryWater = /water/i.test(rawItemName) && !isSparkling;
 
       let cat: ShoppingCategory = 'Food';
-      if (itemName.includes('water') || itemName.includes('juice') || itemName.includes('drink') || itemName.includes('soda')) {
+      let itemName = rawItemName.charAt(0).toUpperCase() + rawItemName.slice(1);
+
+      if (isSparkling) {
         cat = 'Drinks';
-      } else if (itemName.includes('plate') || itemName.includes('cup') || itemName.includes('spoon') || itemName.includes('napkin')) {
+        itemName = 'Sparkling Water';
+      } else if (isOrdinaryWater) {
+        cat = 'Drinks';
+        itemName = 'Bottled Water';
+      } else if (rawItemName.includes('juice') || rawItemName.includes('drink') || rawItemName.includes('soda')) {
+        cat = 'Drinks';
+      } else if (rawItemName.includes('plate') || rawItemName.includes('cup') || rawItemName.includes('spoon') || rawItemName.includes('napkin')) {
         cat = 'Tableware';
-      } else if (itemName.includes('balloon') || itemName.includes('light') || itemName.includes('banner')) {
+      } else if (rawItemName.includes('balloon') || rawItemName.includes('light') || rawItemName.includes('banner')) {
         cat = 'Decorations';
       }
 
-      const newItem: ShoppingItem = {
-        id: `shp-custom-${Date.now()}`,
-        name: itemName.charAt(0).toUpperCase() + itemName.slice(1),
-        category: cat,
-        recommendedQuantity: qty,
-        unit: 'units',
-        estimatedUnitPrice: unitPrice,
-        estimatedTotalPrice: qty * unitPrice,
-        priority: 'Essential',
-        reason: 'Added via AI Assistant inline action',
-        isCustom: true,
-      };
+      const existing = activeEvent.shoppingItems.find(i => {
+        if (i.isRemoved) return false;
+        const n = i.name.toLowerCase();
+        if (isSparkling) return /sparkling/i.test(n);
+        if (isOrdinaryWater) return /water/i.test(n) && !/sparkling/i.test(n);
+        return n.includes(rawItemName.toLowerCase());
+      });
 
-      const updated = [newItem, ...activeEvent.shoppingItems];
+      let updated: ShoppingItem[];
+      if (existing) {
+        updated = activeEvent.shoppingItems.map(i => i.id === existing.id ? {
+          ...i,
+          recommendedQuantity: i.recommendedQuantity + qty,
+          estimatedTotalPrice: (i.recommendedQuantity + qty) * i.estimatedUnitPrice
+        } : i);
+      } else {
+        const newItem: ShoppingItem = {
+          id: `shp-custom-${Date.now()}`,
+          name: itemName,
+          category: cat,
+          recommendedQuantity: qty,
+          unit: 'units',
+          estimatedUnitPrice: unitPrice,
+          estimatedTotalPrice: qty * unitPrice,
+          priority: 'Essential',
+          reason: 'Added via AI Assistant inline action',
+          isCustom: true,
+        };
+        updated = [newItem, ...activeEvent.shoppingItems];
+      }
+
       const newTotal = calculateTotalCost(updated);
       const newRemaining = activeEvent.budget - newTotal;
       updateActiveEvent({ shoppingItems: updated });
@@ -690,8 +767,8 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 3. INLINE ACTION: Change budget (e.g. "Change my budget to ₹10,000", "Increase budget to 20000")
-    const budgetMatch = lower.match(/(?:change|set|increase|update|make)\s+(?:my\s+)?budget\s+(?:to\s+)?(?:₹|rs\.?|inr)?\s*([\d,]+)/i);
+    // 3. INLINE ACTION: Change budget (e.g. "Change my budget to ₹7,000", "Set the budget to 7000 rupees")
+    const budgetMatch = lower.match(/(?:(?:change|set|increase|update|make)\s+(?:my\s+|the\s+)?budget|budget\s*(?:to|at|is|=))\s*(?:to\s+)?(?:₹|rs\.?|inr)?\s*([\d,]+)(?:\s*(?:rupees?|inr))?/i);
     if (budgetMatch) {
       const rawNum = budgetMatch[1].replace(/,/g, '');
       const newBudget = parseInt(rawNum, 10);
@@ -787,6 +864,10 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // 7. INTENT NAVIGATION: Budget
     if (
       lower.includes('show budget') ||
+      lower.includes('show the budget') ||
+      lower.includes('what is the budget') ||
+      lower.includes('what is my budget') ||
+      lower.includes('the budget') ||
       lower.includes('view budget') ||
       lower.includes('my budget') ||
       lower.includes('budget breakdown')

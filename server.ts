@@ -16,6 +16,9 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
+// Always serve public directory directly
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Lazy-initialized Gemini API client
 let aiInstance: GoogleGenAI | null = null;
 
@@ -154,17 +157,17 @@ app.post('/api/gemini/personalized-invitation', async (req, res) => {
 
     if (!ai) {
       return res.json({
-        invitationText: `🎉 You're Invited!\n\nDear ${guestName},\n\nYou are warmly invited to celebrate ${event.name} on ${event.eventDate} at ${event.startTime} at ${event.venue?.name || 'our venue'}.\n\nTheme: ${event.theme}\n\nPlease RSVP to confirm your attendance!`,
+        invitationText: `🎉 You're Invited!\n\nDear ${guestName || 'Guest'},\n\nYou are warmly invited to celebrate ${event?.name || 'our party'} on ${event?.eventDate || 'the upcoming weekend'} at ${event?.startTime || '6:00 PM'} at ${event?.venue?.name || 'our venue'}.\n\nTheme: ${event?.theme || 'Celebration'}\n\nPlease RSVP to confirm your attendance!`,
       });
     }
 
-    const prompt = `Write an elegant, warm, highly personalized event invitation message for guest "${guestName}".
+    const prompt = `Write an elegant, warm, highly personalized event invitation message for guest "${guestName || 'Friend'}".
 Event Details:
-- Name: ${event.name}
-- Theme: ${event.theme}
-- Date: ${event.eventDate}
-- Time: ${event.startTime} - ${event.endTime}
-- Venue: ${event.venue?.name} (${event.venue?.address || event.venue?.city || ''})
+- Name: ${event?.name || 'Celebration'}
+- Theme: ${event?.theme || 'Festive'}
+- Date: ${event?.eventDate || 'Upcoming'}
+- Time: ${event?.startTime || '6:00 PM'} - ${event?.endTime || '10:00 PM'}
+- Venue: ${event?.venue?.name || 'Venue'} (${event?.venue?.address || event?.venue?.city || ''})
 
 Include friendly host enthusiasm, date, time, venue address, and clear RSVP request. Return JSON with key "invitationText".`;
 
@@ -181,7 +184,7 @@ Include friendly host enthusiasm, date, time, venue address, and clear RSVP requ
   } catch (error) {
     console.error('Gemini invite generator error:', error);
     return res.json({
-      invitationText: `Dear ${req.body.guestName},\n\nYou are cordially invited to ${req.body.event?.name || 'our celebration'}!`,
+      invitationText: `Dear ${req.body?.guestName || 'Guest'},\n\nYou are cordially invited to ${req.body?.event?.name || 'our celebration'}!`,
     });
   }
 });

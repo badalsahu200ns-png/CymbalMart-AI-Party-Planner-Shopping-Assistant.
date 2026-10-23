@@ -119,8 +119,8 @@ export const NavbarHeader: React.FC = () => {
                     }}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-blue-400 transition-colors"
                   >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    <span>Create Another Party</span>
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Create New Celebration</span>
                   </button>
                 </div>
               </div>
@@ -128,9 +128,9 @@ export const NavbarHeader: React.FC = () => {
           </div>
         </div>
 
-        {/* Real-time Event Metrics Badges */}
+        {/* Global Live Indicators */}
         <div className="hidden lg:flex items-center gap-3 text-xs">
-          {/* Budget pill */}
+          {/* Budget Quick Indicator */}
           <button
             onClick={() => setCurrentTab('budget')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
@@ -174,8 +174,20 @@ export const NavbarHeader: React.FC = () => {
           </button>
         </div>
 
-        {/* Action Controls & AI Drawer Button */}
+        {/* Action Controls, Alexa+ Demo Link & AI Drawer Button */}
         <div className="flex items-center gap-2.5">
+          {/* Alexa+ Hackathon Demo Link */}
+          <a
+            href="/alexa-plus-demo.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 shadow-md transition-all hover:border-cyan-400"
+            title="Launch Alexa+ Voice Shopping Companion Simulation"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <span className="hidden md:inline">Alexa+ Demo</span>
+          </a>
+
           {/* Universal AI Assistant Controller Trigger */}
           <button
             onClick={() => setIsAssistantOpen(!isAssistantOpen)}
