@@ -20,7 +20,7 @@ import { FinalReviewView } from './components/FinalReviewView';
 import { ExternalLink, SlidersHorizontal, Heart, Sparkles, ShieldCheck } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
-  const { currentTab, setCurrentTab, setIsAssistantOpen } = useParty();
+  const { currentTab, setCurrentTab, setIsAssistantOpen, startAlexaPlanningSession } = useParty();
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
 
   // Check initial session visit for Startup Choice modal
@@ -43,7 +43,7 @@ const MainLayout: React.FC = () => {
       // ignore
     }
     setIsWelcomeOpen(false);
-    setIsAssistantOpen(true);
+    startAlexaPlanningSession();
   };
 
   const handleSelectManualPlan = () => {

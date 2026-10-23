@@ -13,6 +13,9 @@ import {
   Priority,
   PartyType,
   NavigationTab,
+  AssistantLifecycleState,
+  PlanningStage,
+  StructuredPlanningSession,
 } from '../types';
 import { SAMPLE_EVENTS } from '../data/sampleEvents';
 import {
@@ -25,6 +28,8 @@ import {
   formatCurrency,
 } from '../utils/calculations';
 import { generatePersonalizedInviteText } from '../utils/geminiFallback';
+import { processConversationalTurn } from '../utils/conversationController';
+import { speakText, stopSpeaking, isSpeechSynthesisSupported } from '../utils/speechService';
 
 export interface ToastNotification {
   id: string;
@@ -95,6 +100,12 @@ interface PartyContextType {
 
   // AI Assistant Application Controller
   isAssistantOpen: boolean;
+  assistantState: AssistantLifecycleState;
+  setAssistantState: (state: AssistantLifecycleState) => void;
+  planningSession: StructuredPlanningSession;
+  startAlexaPlanningSession: () => void;
+  isVoiceOutputEnabled: boolean;
+  setIsVoiceOutputEnabled: (enabled: boolean) => void;
   setIsAssistantOpen: (open: boolean) => void;
   chatMessages: ChatMessage[];
   sendChatMessage: (text: string) => Promise<void>;
@@ -1054,25 +1065,76 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   };
 
+  // Conversational Voice AI State
+  const [assistantState, setAssistantState] = useState<AssistantLifecycleState>('idle');
+  const [isVoiceOutputEnabled, setIsVoiceOutputEnabled] = useState(true);
+  const [planningSession, setPlanningSession] = useState<StructuredPlanningSession>({
+    currentStage: 'greeting',
+    completedStages: [],
+    isCompleted: false,
+    historySummary: [],
+  });
+
   // Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-welcome',
       sender: 'assistant',
-      text: "Hello! I'm your CymbalMart Assistant & Application Controller. Ask me to add guests, adjust your budget, remove items, or navigate to any section.",
+      text: "Hi! Welcome to CymbalMart PLANNER. I'll help you organize your birthday celebration, create your shopping list, and keep everything within your budget. Let's start with one quick question: whose birthday are we celebrating, and what kind of party do you have in mind?",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       suggestedPrompts: [
-        "Show my budget",
-        "Add guests",
-        "Where is my venue?",
-        "Remove optional items",
+        "Plan a birthday party for 12 guests with a budget of ₹5,000",
+        "Adult birthday for 15 friends",
+        "Rahul's 10th Superhero Birthday",
       ],
+      spokenText: "Hi! Welcome to CymbalMart PLANNER. Whose birthday are we celebrating, and what kind of party do you have in mind?",
     },
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
 
+  const startAlexaPlanningSession = () => {
+    setIsAssistantOpen(true);
+    setAssistantState('awaiting_answer');
+    const initialSession: StructuredPlanningSession = {
+      currentStage: 'celebration_details',
+      completedStages: [],
+      isCompleted: false,
+      historySummary: [],
+    };
+    setPlanningSession(initialSession);
+
+    const greetingText =
+      "Hi! Welcome to CymbalMart PLANNER. I'll help you organize your birthday celebration, create your shopping list, and keep everything within your budget. Let's start with one quick question: whose birthday are we celebrating, and what kind of party do you have in mind?";
+
+    const welcomeMsg: ChatMessage = {
+      id: `msg-welcome-${Date.now()}`,
+      sender: 'assistant',
+      text: greetingText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      suggestedPrompts: [
+        "Plan a birthday party for 12 guests with a budget of ₹5,000",
+        "Rahul's 10th Superhero Birthday",
+        "Adult birthday celebration for 20 guests",
+      ],
+      spokenText: "Hi! Welcome to CymbalMart PLANNER. Whose birthday are we celebrating, and what kind of party do you have in mind?",
+    };
+
+    setChatMessages([welcomeMsg]);
+
+    if (isVoiceOutputEnabled) {
+      speakText(welcomeMsg.spokenText || greetingText, {
+        onStart: () => setAssistantState('speaking'),
+        onEnd: () => setAssistantState('awaiting_answer'),
+      });
+    }
+  };
+
   const sendChatMessage = async (text: string) => {
     if (!text.trim()) return;
+
+    // Stop active speech
+    stopSpeaking();
+    setAssistantState('processing');
 
     const userMsg: ChatMessage = {
       id: `msg-user-${Date.now()}`,
@@ -1085,7 +1147,60 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsAiThinking(true);
 
     try {
-      // First attempt rule-based intent parsing (for instant, reliable app control)
+      // 1. Process via structured Conversation Controller (State machine & natural actions)
+      const turnResult = processConversationalTurn(text, planningSession, activeEvent);
+
+      if (turnResult.executedAction) {
+        setAssistantState('executing_action');
+
+        if (turnResult.eventUpdates) {
+          updateActiveEvent(turnResult.eventUpdates);
+        }
+
+        if (turnResult.sessionUpdates) {
+          setPlanningSession((prev) => ({
+            ...prev,
+            ...turnResult.sessionUpdates,
+          }));
+        }
+
+        if (turnResult.navigatedTo) {
+          if (turnResult.navigatedTo === 'Budget') setCurrentTab('budget');
+          else if (turnResult.navigatedTo === 'Shopping List') setCurrentTab('shopping');
+          else if (turnResult.navigatedTo === 'Guest List') setCurrentTab('guests');
+          else if (turnResult.navigatedTo === 'Venue') setCurrentTab('venue');
+          else if (turnResult.navigatedTo === 'Calendar') setCurrentTab('calendar');
+          else if (turnResult.navigatedTo === 'Final Review') setCurrentTab('final-review');
+        }
+
+        const assistantMsg: ChatMessage = {
+          id: `msg-asst-${Date.now()}`,
+          sender: 'assistant',
+          text: turnResult.reply,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          navigatedTo: turnResult.navigatedTo,
+          updatedDataSummary: turnResult.updatedDataSummary,
+          suggestedPrompts: turnResult.suggestedPrompts,
+          spokenText: turnResult.spokenReply || turnResult.reply,
+        };
+
+        setChatMessages((prev) => [...prev, assistantMsg]);
+        setIsAiThinking(false);
+
+        const targetFinalState: AssistantLifecycleState = turnResult.isPlanComplete ? 'completed' : 'awaiting_answer';
+
+        if (isVoiceOutputEnabled) {
+          speakText(turnResult.spokenReply || turnResult.reply, {
+            onStart: () => setAssistantState('speaking'),
+            onEnd: () => setAssistantState(targetFinalState),
+          });
+        } else {
+          setAssistantState(targetFinalState);
+        }
+        return;
+      }
+
+      // 2. If not caught by controller, attempt deterministic intent parser
       const localResult = await executeIntent(text);
       if (localResult.executed) {
         const assistantMsg: ChatMessage = {
@@ -1096,13 +1211,23 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           navigatedTo: localResult.navigatedTo,
           updatedDataSummary: localResult.updatedDataSummary,
           suggestedPrompts: ["Show my budget", "View shopping list", "Check RSVP", "Final review"],
+          spokenText: localResult.reply,
         };
         setChatMessages((prev) => [...prev, assistantMsg]);
         setIsAiThinking(false);
+
+        if (isVoiceOutputEnabled) {
+          speakText(localResult.reply, {
+            onStart: () => setAssistantState('speaking'),
+            onEnd: () => setAssistantState('awaiting_answer'),
+          });
+        } else {
+          setAssistantState('awaiting_answer');
+        }
         return;
       }
 
-      // If not caught locally, send to server-side Gemini API
+      // 3. Fallback to server-side Gemini endpoint
       const res = await fetch('/api/gemini/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1120,6 +1245,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           text: data.reply || "I've processed your request.",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           suggestedPrompts: data.suggestedPrompts || ["Show my budget", "Manage guests"],
+          spokenText: data.reply,
         };
 
         if (data.targetTab) {
@@ -1127,6 +1253,15 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
 
         setChatMessages((prev) => [...prev, assistantMsg]);
+
+        if (isVoiceOutputEnabled) {
+          speakText(data.reply, {
+            onStart: () => setAssistantState('speaking'),
+            onEnd: () => setAssistantState('awaiting_answer'),
+          });
+        } else {
+          setAssistantState('awaiting_answer');
+        }
       } else {
         throw new Error('Chat API returned non-200');
       }
@@ -1135,11 +1270,13 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const fallbackMsg: ChatMessage = {
         id: `msg-asst-${Date.now()}`,
         sender: 'assistant',
-        text: `Currently monitoring "${activeEvent.name}". Allocated Budget: ${formatCurrency(activeEvent.budget)} | Estimated Items Total: ${formatCurrency(totalShoppingCost)} | Remaining: ${formatCurrency(remainingBudget)}. ${guestMetrics.confirmed} of ${guestMetrics.total} guests confirmed.`,
+        text: `Currently monitoring "${activeEvent.name}". Allocated Budget: ${formatCurrency(activeEvent.budget)} | Estimated Items Total: ${formatCurrency(totalShoppingCost)} | Remaining: ${formatCurrency(remainingBudget)}.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         suggestedPrompts: ["Show my budget", "Show my guests", "Where is my venue?", "Show my shopping list"],
+        spokenText: `Allocated budget is ${activeEvent.budget} rupees with ${remainingBudget} rupees remaining.`,
       };
       setChatMessages((prev) => [...prev, fallbackMsg]);
+      setAssistantState('awaiting_answer');
     } finally {
       setIsAiThinking(false);
     }
@@ -1196,6 +1333,12 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addMissingItemToShoppingList,
         isAssistantOpen,
         setIsAssistantOpen,
+        assistantState,
+        setAssistantState,
+        planningSession,
+        startAlexaPlanningSession,
+        isVoiceOutputEnabled,
+        setIsVoiceOutputEnabled,
         chatMessages,
         sendChatMessage,
         isAiThinking,

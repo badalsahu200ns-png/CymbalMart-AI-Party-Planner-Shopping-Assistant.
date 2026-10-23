@@ -169,6 +169,41 @@ export interface UserProfile {
   currencySymbol: string;
 }
 
+export type AssistantLifecycleState =
+  | 'idle'
+  | 'requesting_permission'
+  | 'listening'
+  | 'processing'
+  | 'speaking'
+  | 'awaiting_answer'
+  | 'executing_action'
+  | 'completed'
+  | 'error';
+
+export type PlanningStage =
+  | 'greeting'
+  | 'celebration_details'
+  | 'guest_count'
+  | 'budget'
+  | 'theme_style'
+  | 'items_and_supplies'
+  | 'review_ready'
+  | 'completed';
+
+export interface StructuredPlanningSession {
+  celebrant?: string;
+  eventType?: string;
+  guestCount?: number;
+  budget?: number;
+  theme?: string;
+  ageGroup?: string;
+  dietary?: string[];
+  currentStage: PlanningStage;
+  completedStages: PlanningStage[];
+  isCompleted: boolean;
+  historySummary: string[];
+}
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'assistant' | 'system';
@@ -178,6 +213,8 @@ export interface ChatMessage {
   navigatedTo?: string;
   updatedDataSummary?: string;
   suggestedPrompts?: string[];
+  spokenText?: string;
+  isVoiceTranscript?: boolean;
 }
 
 export type NavigationTab =
