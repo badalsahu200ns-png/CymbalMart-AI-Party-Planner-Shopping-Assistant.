@@ -112,7 +112,7 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
       if(found){items=items.filter(x=>x.id!==found.id);reply="Removed "+found.name+" from your shopping list. Your updated estimate is "+money(spend())+".";}else reply="I couldn’t match that item. Try “remove balloons” or “remove cake”.";
     }else if(/add|include|need|buy/.test(s)){
       const qtyMatch=s.match(/\b(\d+)\b/);const qty=qtyMatch?Math.max(1,Math.min(99,Number(qtyMatch[1]))):1;
-      let found=items.find(x=>s.includes(x.name.toLowerCase())||(x.id==="water"&&/water/.test(s))||(x.id==="balloons"&&/balloon|decor/.test(s))||(x.id==="cake"&&/cake/.test(s))||(x.id==="plates"&&/plate/.test(s))||(x.id==="snacks"&&/snack|popcorn|chips/.test(s)));
+      let found=items.find(x=>s.includes(x.name.toLowerCase())||(x.id==="water"&&/water/.test(s)&&!/sparkling/.test(s))||(x.id==="balloons"&&/balloon|decor/.test(s))||(x.id==="cake"&&/cake/.test(s))||(x.id==="plates"&&/plate/.test(s))||(x.id==="snacks"&&/snack|popcorn|chips/.test(s)));
       if(found){found.qty+=qty;reply="Added "+qty+" more "+found.name+". The new estimated total is "+money(spend())+".";}
       else {let name="Party supplies",emoji="🛍️",price=100,id="custom-"+Date.now();if(/sparkling water/.test(s)){name="Sparkling water";emoji="🫧";price=70;}else if(/juice|drink/.test(s)){name="Juice cartons";emoji="🧃";price=55;}else if(/napkin/.test(s)){name="Napkins";emoji="🧻";price=45;}else if(/ice/.test(s)){name="Ice bags";emoji="🧊";price=50;}items.push({id,name,emoji,qty,price});reply="Added "+qty+" × "+name+" at an estimated "+money(price)+" each. Your list now totals "+money(spend())+".";}
     }else if(/set.*budget|budget.*(to|at|is)/.test(s)){
