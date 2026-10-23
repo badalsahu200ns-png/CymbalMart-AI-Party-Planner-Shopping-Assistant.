@@ -625,11 +625,39 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   // CONTEXT-AWARE AI APPLICATION CONTROLLER & INTENT PARSER
-  const executeIntent = async (command: string): Promise<{ executed: boolean; reply: string; navigatedTo?: string; updatedDataSummary?: string }> => {
+  const executeIntent = async (command: string): Promise<{ executed: boolean; reply: string; navigatedTo?: string; updatedDataSummary?: string; suggestedPrompts?: string[] }> => {
     const lower = command.toLowerCase().trim();
 
-    // 0. INLINE ACTION: Plan or configure celebration (e.g. "Plan a birthday party for 12 guests with a budget of 5000 rupees")
-    if (/birthday|party|celebration|plan.*(?:party|event|celebration)|create.*(?:party|event)/i.test(lower) && (lower.includes('plan') || lower.includes('create') || lower.includes('for') || lower.includes('budget'))) {
+    // AMBIGUOUS QUERY HANDLERS (Ask clarifying question)
+    if (lower === 'water' || lower === 'bottled water' || lower === 'sparkling water') {
+      return {
+        executed: true,
+        reply: "Would you like to add Bottled Water (₹35 each) or Sparkling Water (₹70 each) to your shopping list? You can say 'Add 2 bottles of sparkling water' or 'Add 10 bottles of water'.",
+        suggestedPrompts: ["Add 2 bottles of sparkling water", "Add 10 bottles of water", "View Drinks Aisle"],
+      };
+    }
+
+    if (lower === 'budget' || lower === 'my budget') {
+      return {
+        executed: true,
+        reply: `Your active budget is ${formatCurrency(activeEvent.budget)} (estimated spend: ${formatCurrency(totalShoppingCost)}, remaining: ${formatCurrency(remainingBudget)}). Would you like to view your budget breakdown or update your spending limit?`,
+        suggestedPrompts: ["Show me my remaining budget", "Change my budget to ₹7,000", "Optimize budget"],
+      };
+    }
+
+    if (lower === 'decorations' || lower === 'decor' || lower === 'balloons') {
+      return {
+        executed: true,
+        reply: "Would you like decoration recommendations for your birthday theme, or would you like to view the Decorations aisle in your shopping list?",
+        suggestedPrompts: ["Suggest decorations for a children's birthday", "View Decorations Aisle"],
+      };
+    }
+
+    // 0. INLINE ACTION: Plan or configure celebration (e.g. "Plan a birthday party for 12 guests with a budget of ₹5,000")
+    if (
+      (/birthday|party|celebration|plan.*(?:party|event|celebration)|create.*(?:party|event)/i.test(lower) && 
+      (lower.includes('plan') || lower.includes('create') || lower.includes('for') || lower.includes('budget') || lower.includes('guest')))
+    ) {
       const gMatch = lower.match(/(\d+)\s*(?:people|guests|persons|attendees)?/i);
       const bMatch = lower.match(/(?:₹|rs\.?\s*|rupees?\s*|inr\s*)([\d,]+)/i) || 
                      lower.match(/budget\s*(?:of|to|is)?\s*(?:₹|rs\.?\s*|inr\s*)?([\d,]+)/i);
@@ -654,28 +682,33 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       return {
         executed: true,
-        reply: `Planned your ${eventType} for ${parsedGuests} guests with a budget of ${formatCurrency(parsedBudget)}.`,
+        reply: `Planned your ${eventType} for ${parsedGuests} guests with a budget of ${formatCurrency(parsedBudget)}. I've synced your starter shopping list and budget ceiling.`,
         updatedDataSummary: `Guests: ${parsedGuests}\nBudget: ${formatCurrency(parsedBudget)}\nEstimated shopping total: ${formatCurrency(totalShoppingCost)}\nRemaining: ${formatCurrency(newRemaining)}`,
+        suggestedPrompts: ["Add two bottles of sparkling water", "Show me my remaining budget", "Suggest decorations for a children's birthday"],
         navigatedTo: 'Dashboard',
       };
     }
 
-    // 1. INLINE ACTION: Remove item (e.g. "remove balloons", "remove pizza", "delete 10 cups")
+    // 1. INLINE ACTION: Remove item (e.g. "remove balloons", "remove balloons from my shopping list", "delete pizza")
     if (lower.startsWith('remove ') || lower.startsWith('delete ') || lower.includes('remove item') || lower.includes('take off')) {
-      const targetQuery = lower.replace(/^(?:please\s+)?(?:remove|delete|take\s+off)\s+(?:the\s+)?/i, '').trim();
-      const isSparkling = /sparkling/i.test(targetQuery);
-      const isOrdinaryWater = /water/i.test(targetQuery) && !isSparkling;
+      const cleaned = lower
+        .replace(/^(?:please\s+)?(?:remove|delete|take\s+off)\s+(?:the\s+)?/i, '')
+        .replace(/\s+from\s+(?:my\s+)?(?:shopping\s+)?list/i, '')
+        .trim();
+
+      const isSparkling = /sparkling/i.test(cleaned);
+      const isOrdinaryWater = /water/i.test(cleaned) && !isSparkling;
 
       const match = activeEvent.shoppingItems.find((i) => {
         if (i.isRemoved) return false;
         const itemName = i.name.toLowerCase();
         if (isSparkling) return /sparkling/i.test(itemName);
         if (isOrdinaryWater) return /water/i.test(itemName) && !/sparkling/i.test(itemName);
-        if (/balloon|decor/i.test(targetQuery)) return /balloon|decor/i.test(itemName);
-        if (/cake/i.test(targetQuery)) return /cake/i.test(itemName);
-        if (/plate/i.test(targetQuery)) return /plate/i.test(itemName);
-        if (/snack/i.test(targetQuery)) return /snack|popcorn|chips/i.test(itemName);
-        return itemName.includes(targetQuery) || targetQuery.includes(itemName);
+        if (/balloon|decor/i.test(cleaned)) return /balloon|decor/i.test(itemName);
+        if (/cake/i.test(cleaned)) return /cake/i.test(itemName);
+        if (/plate/i.test(cleaned)) return /plate/i.test(itemName);
+        if (/snack/i.test(cleaned)) return /snack|popcorn|chips/i.test(itemName);
+        return itemName.includes(cleaned) || cleaned.includes(itemName);
       });
 
       if (match) {
@@ -686,8 +719,15 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         return {
           executed: true,
-          reply: `Removed "${match.name}".`,
+          reply: `Removed "${match.name}" from your shopping list.`,
           updatedDataSummary: `Updated total: ${formatCurrency(newTotal)}\nBudget remaining: ${formatCurrency(newRemaining)}`,
+          suggestedPrompts: ["Show me my remaining budget", "View shopping list", "Add two bottles of sparkling water"],
+        };
+      } else {
+        return {
+          executed: true,
+          reply: `I couldn't find "${cleaned}" on your active shopping list. Try "Remove balloons" or "View shopping list".`,
+          suggestedPrompts: ["View shopping list", "Show me my remaining budget"],
         };
       }
     }
@@ -702,11 +742,19 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (addQuantityMatch) {
       const rawQty = addQuantityMatch[1].toLowerCase();
       const qty = /^\d+$/.test(rawQty) ? parseInt(rawQty, 10) : (wordNumbers[rawQty] || 1);
-      const rawItemName = addQuantityMatch[2].trim();
-      const unitPrice = addQuantityMatch[3] ? parseInt(addQuantityMatch[3], 10) : (/sparkling/i.test(rawItemName) ? 70 : 50);
+      
+      if (qty <= 0) {
+        return {
+          executed: true,
+          reply: "Item quantity must be at least 1. For example, try saying 'Add two bottles of sparkling water'.",
+        };
+      }
 
+      const rawItemName = addQuantityMatch[2].trim();
       const isSparkling = /sparkling/i.test(rawItemName);
       const isOrdinaryWater = /water/i.test(rawItemName) && !isSparkling;
+
+      const unitPrice = addQuantityMatch[3] ? parseInt(addQuantityMatch[3], 10) : (isSparkling ? 70 : (isOrdinaryWater ? 35 : 50));
 
       let cat: ShoppingCategory = 'Food';
       let itemName = rawItemName.charAt(0).toUpperCase() + rawItemName.slice(1);
@@ -750,7 +798,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           estimatedUnitPrice: unitPrice,
           estimatedTotalPrice: qty * unitPrice,
           priority: 'Essential',
-          reason: 'Added via AI Assistant inline action',
+          reason: 'Added via Alexa-inspired Assistant',
           isCustom: true,
         };
         updated = [newItem, ...activeEvent.shoppingItems];
@@ -762,28 +810,88 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       return {
         executed: true,
-        reply: `Added ${qty} ${itemName} to your Shopping List.`,
+        reply: `Added ${qty} ${itemName} to your Shopping List at ${formatCurrency(unitPrice)} each.`,
         updatedDataSummary: `Updated total: ${formatCurrency(newTotal)}\nBudget remaining: ${formatCurrency(newRemaining)}`,
+        suggestedPrompts: ["Show me my remaining budget", "Remove balloons from my shopping list", "View shopping list"],
       };
     }
 
     // 3. INLINE ACTION: Change budget (e.g. "Change my budget to ₹7,000", "Set the budget to 7000 rupees")
-    const budgetMatch = lower.match(/(?:(?:change|set|increase|update|make)\s+(?:my\s+|the\s+)?budget|budget\s*(?:to|at|is|=))\s*(?:to\s+)?(?:₹|rs\.?|inr)?\s*([\d,]+)(?:\s*(?:rupees?|inr))?/i);
-    if (budgetMatch) {
-      const rawNum = budgetMatch[1].replace(/,/g, '');
-      const newBudget = parseInt(rawNum, 10);
-      if (!isNaN(newBudget) && newBudget > 0) {
-        updateActiveEvent({ budget: newBudget });
-        const newRemaining = newBudget - totalShoppingCost;
+    if (/(?:change|set|increase|update|make)\s+(?:my\s+|the\s+)?budget|budget\s*(?:to|at|is|=)/i.test(lower)) {
+      if (lower.includes('-') || lower.includes('negative')) {
         return {
           executed: true,
-          reply: `Updated event budget to ${formatCurrency(newBudget)}.`,
-          updatedDataSummary: `Total shopping cost: ${formatCurrency(totalShoppingCost)}\nBudget status: ${newRemaining >= 0 ? `Under budget by ${formatCurrency(newRemaining)}` : `Over budget by ${formatCurrency(Math.abs(newRemaining))}`}`,
+          reply: "Budget must be a positive amount in Indian Rupees (e.g., 'Change my budget to ₹7,000').",
         };
+      }
+
+      const budgetMatch = lower.match(/(?:(?:change|set|increase|update|make)\s+(?:my\s+|the\s+)?budget|budget\s*(?:to|at|is|=))\s*(?:to\s+)?(?:₹|rs\.?|inr)?\s*([\d,]+)(?:\s*(?:rupees?|inr))?/i);
+      if (budgetMatch) {
+        const rawNum = budgetMatch[1].replace(/,/g, '');
+        const newBudget = parseInt(rawNum, 10);
+        if (!isNaN(newBudget) && newBudget > 0) {
+          updateActiveEvent({ budget: newBudget });
+          const newRemaining = newBudget - totalShoppingCost;
+          return {
+            executed: true,
+            reply: `Updated event budget to ${formatCurrency(newBudget)}.`,
+            updatedDataSummary: `Total shopping cost: ${formatCurrency(totalShoppingCost)}\nBudget status: ${newRemaining >= 0 ? `Under budget by ${formatCurrency(newRemaining)}` : `Over budget by ${formatCurrency(Math.abs(newRemaining))}`}`,
+            suggestedPrompts: ["Show me my remaining budget", "How much will the party cost?", "View Budget Breakdown"],
+          };
+        }
       }
     }
 
-    // 4. INTENT NAVIGATION: Guests
+    // 4. INLINE ACTION: Suggest decorations for a children's birthday
+    if (lower.includes('suggest decoration') || lower.includes('decoration suggestion') || lower.includes('decorations for') || lower.includes('party decoration')) {
+      return {
+        executed: true,
+        reply: "Here are popular birthday decoration suggestions for your party:\n• Themed Superhero Foil Balloons & Banner Kit (est. ₹650)\n• Colorful Confetti Table Runners (est. ₹250)\n• Warm White LED Fairy String Lights (est. ₹350)\n• Festive Photo Backdrop & Prop Pack (est. ₹480)\n\n(These are AI suggestions — tell me which you would like to confirm and add to your list!)",
+        suggestedPrompts: ["Add 1 banner kit", "Add fairy lights", "View Decorations Aisle"],
+      };
+    }
+
+    // 5. QUERY: How much will the party cost?
+    if (
+      lower.includes('how much will the party cost') ||
+      lower.includes('how much does the party cost') ||
+      lower.includes('what will the party cost') ||
+      lower.includes('total cost') ||
+      lower.includes('party cost')
+    ) {
+      setCurrentTab('budget');
+      return {
+        executed: true,
+        reply: `The estimated shopping cost for "${activeEvent.name}" is ${formatCurrency(totalShoppingCost)} against your ${formatCurrency(activeEvent.budget)} budget. You have ${remainingBudget >= 0 ? `${formatCurrency(remainingBudget)} remaining` : `exceeded your budget by ${formatCurrency(Math.abs(remainingBudget))}`}.`,
+        updatedDataSummary: `Estimated Shopping: ${formatCurrency(totalShoppingCost)}\nAllocated Budget: ${formatCurrency(activeEvent.budget)}\nStatus: ${remainingBudget >= 0 ? `Under by ${formatCurrency(remainingBudget)}` : `Over by ${formatCurrency(Math.abs(remainingBudget))}`}`,
+        suggestedPrompts: ["Show me my remaining budget", "Optimize budget", "View shopping list"],
+        navigatedTo: 'Budget',
+      };
+    }
+
+    // 6. QUERY: Show me my remaining budget
+    if (
+      lower.includes('remaining budget') ||
+      lower.includes('show budget') ||
+      lower.includes('show the budget') ||
+      lower.includes('view budget') ||
+      lower.includes('my budget') ||
+      lower.includes('the budget') ||
+      lower.includes('what is my budget') ||
+      lower.includes('what is the budget') ||
+      lower.includes('budget breakdown')
+    ) {
+      setCurrentTab('budget');
+      return {
+        executed: true,
+        reply: `Navigated to Budget. Allocated Budget: ${formatCurrency(activeEvent.budget)} | Estimated Shopping Spend: ${formatCurrency(totalShoppingCost)} | Remaining Capacity: ${formatCurrency(remainingBudget)}.`,
+        updatedDataSummary: `Allocated: ${formatCurrency(activeEvent.budget)}\nEstimated Spend: ${formatCurrency(totalShoppingCost)}\nRemaining: ${formatCurrency(remainingBudget)}`,
+        suggestedPrompts: ["How much will the party cost?", "Change my budget to ₹7,000", "Optimize budget"],
+        navigatedTo: 'Budget',
+      };
+    }
+
+    // 7. INTENT NAVIGATION: Guests
     if (
       lower.includes('add guest') ||
       lower.includes('add a guest') ||
@@ -815,7 +923,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 5. INTENT NAVIGATION: Venue
+    // 8. INTENT NAVIGATION: Venue
     if (
       lower.includes('venue') ||
       lower.includes('where is my venue') ||
@@ -832,7 +940,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 6. INTENT NAVIGATION: Shopping List
+    // 9. INTENT NAVIGATION: Shopping List
     if (
       lower.includes('add item') ||
       lower.includes('add shopping item') ||
@@ -861,25 +969,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 7. INTENT NAVIGATION: Budget
-    if (
-      lower.includes('show budget') ||
-      lower.includes('show the budget') ||
-      lower.includes('what is the budget') ||
-      lower.includes('what is my budget') ||
-      lower.includes('the budget') ||
-      lower.includes('view budget') ||
-      lower.includes('my budget') ||
-      lower.includes('budget breakdown')
-    ) {
-      setCurrentTab('budget');
-      return {
-        executed: true,
-        reply: `Navigated to Budget. Allocated: ${formatCurrency(activeEvent.budget)} | Estimated Shopping: ${formatCurrency(totalShoppingCost)} | Remaining: ${formatCurrency(remainingBudget)}.`,
-        navigatedTo: 'Budget',
-      };
-    }
-
+    // 10. INTENT NAVIGATION: Budget Optimizer
     if (
       lower.includes('optimize budget') ||
       lower.includes('make it cheaper') ||
@@ -894,7 +984,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 8. INTENT NAVIGATION: Invitations
+    // 11. INTENT NAVIGATION: Invitations
     if (
       lower.includes('invitation') ||
       lower.includes('invite') ||
@@ -909,7 +999,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 9. INTENT NAVIGATION: Calendar
+    // 12. INTENT NAVIGATION: Calendar
     if (
       lower.includes('calendar') ||
       lower.includes('schedule') ||
@@ -925,7 +1015,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 10. INTENT NAVIGATION: Final Review & Completeness
+    // 13. INTENT NAVIGATION: Final Review & Completeness
     if (
       lower.includes('finalize') ||
       lower.includes('final review') ||
@@ -942,7 +1032,7 @@ export const PartyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
     }
 
-    // 11. INTENT NAVIGATION: Party Planner
+    // 14. INTENT NAVIGATION: Party Planner
     if (
       lower.includes('edit event') ||
       lower.includes('edit party') ||

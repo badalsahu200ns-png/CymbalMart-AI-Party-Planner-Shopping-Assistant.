@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0F172A" />
+  <title>Created by Badal Kumar Sahu | CymbalMart PLANNER – Birthday</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --navy: #0F172A;
+      --navy-light: #1E293B;
+      --slate: #64748B;
+      --blue: #2563EB;
+      --purple: #7C3AED;
+      --pink: #EC4899;
+      --orange: #F97316;
+      --border: #E2E8F0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.05) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 90%, rgba(236, 72, 153, 0.05) 0%, transparent 40%),
+                  var(--bg);
+      color: var(--navy);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 20px;
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 3px;
+    }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 48px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--navy-light);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+    }
+    .back-link:hover {
+      color: var(--blue);
+      border-color: var(--blue);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+      transform: translateX(-2px);
+    }
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #FFFFFF;
+      background: linear-gradient(135deg, var(--blue), var(--purple), var(--pink));
+      padding: 6px 14px;
+      border-radius: 999px;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+    }
+    .hero-card {
+      background: #FFFFFF;
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      padding: 44px 40px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--blue), var(--purple), var(--pink), var(--orange));
+    }
+    .avatar-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #2563EB, #7C3AED);
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-weight: 900;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+      position: relative;
+    }
+    .badge-icon {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      width: 26px;
+      height: 26px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: clamp(28px, 4vw, 36px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--navy);
+      line-height: 1.15;
+    }
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--blue);
+      margin-bottom: 4px;
+    }
+    .supporting-text {
+      font-size: 16px;
+      color: var(--slate);
+      line-height: 1.6;
+      max-width: 680px;
+      margin-top: 14px;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .contact-card {
+      background: #FFFFFF;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 170px;
+      transition: all 0.25s ease;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+    }
+    .contact-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px rgba(37, 99, 235, 0.1);
+      border-color: var(--blue);
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      transition: transform 0.2s ease;
+    }
+    .contact-card:hover .icon-box {
+      transform: scale(1.08);
+    }
+    .linkedin-icon { background: #EFF6FF; color: #0A66C2; }
+    .portfolio-icon { background: #FAF5FF; color: #7C3AED; }
+    .github-icon { background: #F1F5F9; color: #0F172A; }
+
+    .arrow-icon {
+      color: var(--slate);
+      transition: all 0.2s ease;
+    }
+    .contact-card:hover .arrow-icon {
+      color: var(--blue);
+      transform: translate(2px, -2px);
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .card-action {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .project-attribution {
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+    .project-logo {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+    .project-text h3 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 2px;
+    }
+    .project-text p {
+      font-size: 12.5px;
+      color: var(--slate);
+      line-height: 1.45;
+    }
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--slate);
+      padding-top: 16px;
+    }
+    @media (max-width: 600px) {
+      body { padding: 20px 16px; }
+      .hero-card { padding: 28px 22px; }
+      .avatar-wrapper { flex-direction: column; align-items: flex-start; gap: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav-bar">
+      <a href="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Back to CymbalMart PLANNER</span>
+      </a>
+      <div class="brand-pill">
+        <span>CymbalMart</span>
+        <span>•</span>
+        <span>PLANNER – Birthday</span>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero-card">
+        <div class="avatar-wrapper">
+          <div class="avatar" aria-hidden="true">
+            BS
+            <div class="badge-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="eyebrow">Project Creator &amp; Architect</div>
+            <h1>Created by Badal Kumar Sahu</h1>
+          </div>
+        </div>
+        <p class="supporting-text">
+          Building practical AI-powered experiences that simplify planning, productivity, and everyday decisions.
+        </p>
+      </section>
+
+      <!-- Three Contact Cards (exact URLs and Labels) -->
+      <section class="cards-grid" aria-label="Creator Profiles">
+        <!-- 1. LinkedIn -->
+        <a href="https://www.linkedin.com/in/badalsahu200ns" target="_blank" rel="noopener noreferrer" class="contact-card">
+          <div class="card-top">
+            <div class="icon-box linkedin-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45c-.96 0-1.74.78-1.74 1.74s.78 1.74 1.74 1.74 1.74-.78 1.74-1.74-.78-1.74-1.74-1.74Z"/>
+              </svg>
+            </div>
+            <div class="arrow-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7"></line>
+                <polyline points="7 7 17 7 17 17"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="card-title">LinkedIn</div>
+            <div class="card-action">Connect on LinkedIn ↗</div>
+          </div>
+        </a>
+
+        <!-- 2. Portfolio -->
+        <a href="https://github.com/badalsahu200ns-png" target="_blank" rel="noopener noreferrer" class="contact-card">
+          <div class="card-top">
+            <div class="icon-box portfolio-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </div>
+            <div class="arrow-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7"></line>
+                <polyline points="7 7 17 7 17 17"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="card-title">Portfolio</div>
+            <div class="card-action">Explore Portfolio ↗</div>
+          </div>
+        </a>
+
+        <!-- 3. GitHub -->
+        <a href="https://github.com/badalsahu200ns-png" target="_blank" rel="noopener noreferrer" class="contact-card">
+          <div class="card-top">
+            <div class="icon-box github-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z"/>
+              </svg>
+            </div>
+            <div class="arrow-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7"></line>
+                <polyline points="7 7 17 7 17 17"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="card-title">GitHub</div>
+            <div class="card-action">View GitHub ↗</div>
+          </div>
+        </a>
+      </section>
+
+      <!-- Attribution & Project Context -->
+      <section class="project-attribution">
+        <img src="/brand/cymbalmart-birthday-mark.svg" alt="CymbalMart Logo" class="project-logo" />
+        <div class="project-text">
+          <h3>CymbalMart PLANNER – Birthday</h3>
+          <p>
+            An AI-driven event planning and retail grocery assistant featuring Alexa-inspired conversational party planning, 9-aisle retail budgeting, and automated guest orchestration.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      CymbalMart PLANNER – Birthday • Built with React 19, TypeScript, and Google Gemini 2.5 Flash
+    </footer>
+  </div>
+</body>
+</html>

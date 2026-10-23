@@ -1,6 +1,9 @@
 {
-  "name": "CymbalMart AI Party Planner",
-  "description": "An AI-powered event assistant that streamlines party planning, budget tracking, and shopping list generation with seamless Google integrations.",
+  "name": "CymbalMart PLANNER – Birthday",
+  "productTitle": "PLANNER – Birthday",
+  "tagline": "Smart Event & Shopping Assistant",
+  "creator": "Badal Kumar Sahu",
+  "description": "An AI-powered birthday planner and retail shopping assistant featuring Alexa-inspired conversational party planning, 9-aisle retail budgeting, and automated guest orchestration.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

@@ -101,51 +101,86 @@ export const PartyPlannerView: React.FC = () => {
     e.preventDefault();
 
     if (!name.trim()) {
-      addToast('Please enter an event name', 'error');
+      addToast('Please enter an event name.', 'error');
+      return;
+    }
+
+    if (budget < 0) {
+      addToast('Budget cannot be negative.', 'error');
       return;
     }
 
     if (isCreatingNew) {
-      // SINGLE CREATION FLOW
-      const generatedItems = generateDefaultShoppingListForEvent(type, theme, guestCount, isOutdoor);
-      const newEvt = createNewEvent({
+      const defaultShopping = generateDefaultShoppingListForEvent(type, theme || 'Celebration', Number(guestCount), isOutdoor);
+      createNewEvent({
         name: name.trim(),
         type,
         theme: theme.trim() || 'Festive Celebration',
-        guestCount,
+        guestCount: Number(guestCount),
         eventDate,
         startTime,
         endTime,
-        budget,
+        budget: Number(budget),
         ageGroup,
         isOutdoor,
         dietaryPreferences,
-        specialRequests,
-        shoppingItems: generatedItems,
-        guests: [],
+        specialRequests: specialRequests.trim(),
+        shoppingItems: defaultShopping,
+        venue: {
+          name: 'Celebration Venue',
+          address: '42 Marine Promenade',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          postalCode: '400020',
+          notes: 'Standard private party venue',
+          parkingNotes: 'Free parking on premises',
+        },
+        guests: [
+          {
+            id: 'g-default-1',
+            name: 'Priya Sharma',
+            email: 'priya@example.com',
+            phone: '+91 98201 11111',
+            rsvpStatus: 'Confirmed',
+            invitationStatus: 'Sent',
+            reminderStatus: 'Scheduled',
+            dietaryNotes: 'Vegetarian',
+            plusOnes: 1,
+          },
+          {
+            id: 'g-default-2',
+            name: 'Anand Patel',
+            email: 'anand@example.com',
+            phone: '+91 98201 22222',
+            rsvpStatus: 'Pending',
+            invitationStatus: 'Generated',
+            reminderStatus: 'Scheduled',
+            dietaryNotes: '',
+            plusOnes: 0,
+          },
+        ],
       });
 
+      addToast(`Celebration "${name}" created with custom checklist!`, 'success');
       setIsCreatingNew(false);
-      addToast(`Created "${newEvt.name}"! Shopping items generated.`, 'success');
       setCurrentTab('dashboard');
     } else {
-      // EDIT EVENT
       updateActiveEvent({
         name: name.trim(),
         type,
         theme: theme.trim(),
-        guestCount,
+        guestCount: Number(guestCount),
         eventDate,
         startTime,
         endTime,
-        budget,
+        budget: Number(budget),
         ageGroup,
         isOutdoor,
         dietaryPreferences,
-        specialRequests,
+        specialRequests: specialRequests.trim(),
       });
 
-      addToast('Event details updated successfully!', 'success');
+      addToast('Event parameters updated successfully.', 'success');
       setCurrentTab('dashboard');
     }
   };
@@ -179,7 +214,7 @@ export const PartyPlannerView: React.FC = () => {
       } else {
         throw new Error('AI parse failed');
       }
-    } catch (e) {
+    } catch {
       // Local fallback parsing
       const text = aiPrompt.toLowerCase();
       if (text.includes('birthday')) setType('Birthday Party');
@@ -204,13 +239,13 @@ export const PartyPlannerView: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header & Mode Switcher */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-display font-black text-white tracking-tight flex items-center gap-2.5">
-            <Sparkles className="w-6 h-6 text-blue-400" />
+          <h1 className="text-2xl font-display font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Sparkles className="w-6 h-6 text-blue-600" />
             <span>{isCreatingNew ? 'Create Party' : 'Edit Event'}</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {isCreatingNew
               ? 'One primary creation flow: configure your event details to generate matching shopping lists and schedules.'
               : `Managing canonical settings for "${activeEvent.name}".`}
@@ -221,9 +256,9 @@ export const PartyPlannerView: React.FC = () => {
           {isCreatingNew ? (
             <button
               onClick={() => setIsCreatingNew(false)}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors"
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors"
             >
-              Cancel & Return to Active Event
+              Cancel &amp; Return to Active Event
             </button>
           ) : (
             <button
@@ -234,7 +269,7 @@ export const PartyPlannerView: React.FC = () => {
                 setBudget(10000);
                 setGuestCount(20);
               }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-blue-400 border border-slate-700 transition-colors"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-xs font-semibold text-blue-700 border border-blue-200 transition-colors"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Create Another Party</span>
@@ -244,15 +279,15 @@ export const PartyPlannerView: React.FC = () => {
       </div>
 
       {/* AI Quick Generator Bar */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-indigo-950/40 to-slate-900 border border-blue-900/40 space-y-3">
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200/80 shadow-xs space-y-3">
         <div className="flex items-center gap-2">
-          <Wand2 className="w-4 h-4 text-blue-400 animate-pulse" />
-          <span className="text-xs font-bold text-white uppercase tracking-wider">
+          <Wand2 className="w-4 h-4 text-blue-600 animate-pulse" />
+          <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
             Gemini AI Instant Party Builder
           </span>
         </div>
-        <p className="text-xs text-slate-300">
-          Type your party idea in plain language (e.g., <span className="italic text-blue-300">"Bollywood Retro Birthday for 30 friends with budget ₹18,000"</span>) and let AI populate the parameters.
+        <p className="text-xs text-slate-600">
+          Type your party idea in plain language (e.g., <span className="italic font-medium text-blue-700">"Bollywood Retro Birthday for 30 friends with budget ₹18,000"</span>) and let AI populate the parameters.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-2">
@@ -262,13 +297,13 @@ export const PartyPlannerView: React.FC = () => {
             onChange={(e) => setAiPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAiQuickPlan()}
             placeholder="E.g., 25th Anniversary rooftop dinner for 40 guests, budget ₹25,000 with mocktail bar"
-            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
           />
           <button
             type="button"
             disabled={isGeneratingWithAi}
             onClick={handleAiQuickPlan}
-            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-xs font-bold text-white transition-all shrink-0 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30"
+            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs font-bold text-white transition-all shrink-0 flex items-center justify-center gap-2 shadow-md shadow-blue-600/20"
           >
             <Bot className="w-4 h-4" />
             <span>{isGeneratingWithAi ? 'Thinking...' : 'AI Auto-Fill'}</span>
@@ -278,36 +313,36 @@ export const PartyPlannerView: React.FC = () => {
 
       {/* Canonical Event Form */}
       <form onSubmit={handleSaveOrUpdate} className="space-y-6">
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-5">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <PartyPopper className="w-4 h-4 text-blue-400" />
+        <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-5">
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <PartyPopper className="w-4 h-4 text-blue-600" />
             <span>Event Core Information</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Event Name */}
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-semibold text-slate-300">Event Title *</label>
+              <label className="text-xs font-semibold text-slate-700">Event Title *</label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Rahul's Tropical Birthday Celebration"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Party Type */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Party Type</label>
+              <label className="text-xs font-semibold text-slate-700">Party Type</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as PartyType)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {PARTY_TYPES.map((t) => (
-                  <option key={t} value={t} className="bg-slate-900 text-white">
+                  <option key={t} value={t} className="bg-white text-slate-900">
                     {t}
                   </option>
                 ))}
@@ -316,21 +351,21 @@ export const PartyPlannerView: React.FC = () => {
 
             {/* Theme */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Theme / Aesthetic</label>
+              <label className="text-xs font-semibold text-slate-700">Theme / Aesthetic</label>
               <input
                 type="text"
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
                 placeholder="e.g. Tropical Neon Fiesta, Retro 90s, Bollywood Glam"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Target Guests */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
                 <span>Target Guest Count</span>
-                <span className="text-blue-400 font-bold">{guestCount} Guests</span>
+                <span className="text-blue-600 font-bold">{guestCount} Guests</span>
               </label>
               <input
                 type="number"
@@ -338,15 +373,15 @@ export const PartyPlannerView: React.FC = () => {
                 max="500"
                 value={guestCount}
                 onChange={(e) => setGuestCount(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Total Budget */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
                 <span>Budget (₹)</span>
-                <span className="text-emerald-400 font-bold">₹{budget.toLocaleString('en-IN')}</span>
+                <span className="text-emerald-700 font-bold">₹{budget.toLocaleString('en-IN')}</span>
               </label>
               <input
                 type="number"
@@ -354,58 +389,58 @@ export const PartyPlannerView: React.FC = () => {
                 step="500"
                 value={budget}
                 onChange={(e) => setBudget(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         </div>
 
         {/* Date, Time & Environment */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-5">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-blue-400" />
-            <span>Schedule & Logistics</span>
+        <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-5">
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-blue-600" />
+            <span>Schedule &amp; Logistics</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Event Date</label>
+              <label className="text-xs font-semibold text-slate-700">Event Date</label>
               <input
                 type="date"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Start Time</label>
+              <label className="text-xs font-semibold text-slate-700">Start Time</label>
               <input
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">End Time</label>
+              <label className="text-xs font-semibold text-slate-700">End Time</label>
               <input
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Age Demographic</label>
+              <label className="text-xs font-semibold text-slate-700">Age Demographic</label>
               <select
                 value={ageGroup}
                 onChange={(e) => setAgeGroup(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="Kids (0-12)">Kids (0-12)</option>
                 <option value="Teens (13-17)">Teens (13-17)</option>
@@ -416,15 +451,15 @@ export const PartyPlannerView: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Environment</label>
+              <label className="text-xs font-semibold text-slate-700">Environment</label>
               <div className="flex items-center gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsOutdoor(false)}
                   className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
                     !isOutdoor
-                      ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                      : 'bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-800'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                      : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                   }`}
                 >
                   Indoor
@@ -434,8 +469,8 @@ export const PartyPlannerView: React.FC = () => {
                   onClick={() => setIsOutdoor(true)}
                   className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
                     isOutdoor
-                      ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                      : 'bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-800'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                      : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                   }`}
                 >
                   Outdoor / Rooftop
@@ -446,9 +481,9 @@ export const PartyPlannerView: React.FC = () => {
         </div>
 
         {/* Dietary & Hospitality Notes */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-            Dietary Preferences & Special Requests
+        <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-4">
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+            Dietary Preferences &amp; Special Requests
           </h2>
 
           <div className="flex flex-wrap gap-2">
@@ -461,8 +496,8 @@ export const PartyPlannerView: React.FC = () => {
                   onClick={() => toggleDietary(pref)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                     isSelected
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:bg-slate-800'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold'
+                      : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                   }`}
                 >
                   {isSelected ? '✓ ' : '+ '}
@@ -473,13 +508,13 @@ export const PartyPlannerView: React.FC = () => {
           </div>
 
           <div className="space-y-1.5 pt-2">
-            <label className="text-xs font-semibold text-slate-300">Special Host Notes</label>
+            <label className="text-xs font-semibold text-slate-700">Special Host Notes</label>
             <textarea
               rows={2}
               value={specialRequests}
               onChange={(e) => setSpecialRequests(e.target.value)}
               placeholder="e.g. Need dedicated mocktail station, acoustic playlist during entry, cake cutting sharp at 8 PM..."
-              className="w-full px-3.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -488,7 +523,7 @@ export const PartyPlannerView: React.FC = () => {
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-black uppercase tracking-wider text-white shadow-xl shadow-blue-600/30 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs font-black uppercase tracking-wider text-white shadow-xl shadow-blue-600/25 transition-all cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>{isCreatingNew ? 'Create Party' : 'Save Changes'}</span>
